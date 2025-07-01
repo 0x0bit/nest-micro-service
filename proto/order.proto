@@ -1,0 +1,35 @@
+syntax = "proto3";
+
+package order;
+
+service OrderService {
+  rpc Create (Order) returns (CreateOrderResponse);
+  rpc FindOrderByUser (GetOrderByUserIdRequest) returns (GetOrderByUserIdResponse);
+}
+
+message CreateOrderResponse {
+  Order order = 1;
+}
+
+message GetOrderByUserIdRequest {
+  int32 id = 1;
+}
+message GetOrderByUserIdResponse {
+  repeated Order order = 1;
+}
+
+//枚举消息类型，使用enum关键词定义
+enum OrderStatus {
+  UNKNOWN = 0; // proto3版本中，首成员必须为0,默认值，通常表示未知或未指定
+  DOING = 1;
+  CACEL = 2;
+  DONE = 3;
+  REFUND = 4;
+};
+
+message Order {
+  int32 id = 1;
+  int32 user = 2;
+  float payable = 3;
+  OrderStatus status = 4;
+}
