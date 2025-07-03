@@ -13,6 +13,15 @@
   },
   "monorepo": true,
   "projects": {
+    "consul": {
+      "type": "library",
+      "root": "libs/consul",
+      "entryFile": "index",
+      "sourceRoot": "libs/consul/src",
+      "compilerOptions": {
+        "tsConfigPath": "libs/consul/tsconfig.lib.json"
+      }
+    },
     "gateway": {
       "type": "application",
       "root": "apps/gateway",
