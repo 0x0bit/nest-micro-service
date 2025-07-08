@@ -82,7 +82,8 @@
       "<rootDir>/libs/"
     ],
     "moduleNameMapper": {
-      "^@app/consul(|/.*)$": "<rootDir>/libs/consul/src/$1"
+      "^@app/consul(|/.*)$": "<rootDir>/libs/consul/src/$1",
+      "^@app/grpc(|/.*)$": "<rootDir>/libs/grpc/src/$1"
     }
   }
 }

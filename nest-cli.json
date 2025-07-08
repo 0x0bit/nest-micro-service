@@ -31,6 +31,15 @@
         "tsConfigPath": "apps/gateway/tsconfig.app.json"
       }
     },
+    "grpc": {
+      "type": "library",
+      "root": "libs/grpc",
+      "entryFile": "index",
+      "sourceRoot": "libs/grpc/src",
+      "compilerOptions": {
+        "tsConfigPath": "libs/grpc/tsconfig.lib.json"
+      }
+    },
     "order-service": {
       "type": "application",
       "root": "apps/order-service",

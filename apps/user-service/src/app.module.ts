@@ -1,6 +1,7 @@
 import { ConsulModule } from '@libs/consul';
 import { Module } from '@nestjs/common';
 import { UserModule } from './user/user.module';
+import { USER_SERVICE_NAME } from '../../../proto/generated/user.interface';
 
 @Module({
   imports: [
@@ -9,7 +10,7 @@ import { UserModule } from './user/user.module';
       token: '123456',
       service: {
         ID: 'user-service-id',
-        Name: 'user-service',
+        Name: USER_SERVICE_NAME,
         Address: '127.0.0.1',
         Port: 3001,
       },
