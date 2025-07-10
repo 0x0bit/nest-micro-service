@@ -1,9 +1,36 @@
 import { Logger, Provider } from '@nestjs/common';
-import { GrpcClientOptions } from '@app/grpc/interfaces/grpc-client-options.interface';
+import { GrpcClientOptions } from './interfaces/grpc-client-options.interface';
 import { ConsulService } from '@libs/consul';
-import { ClientProxyFactory, Transport } from '@nestjs/microservices';
+import {
+  ClientGrpc,
+  ClientProxyFactory,
+  Transport,
+} from '@nestjs/microservices';
 import { join } from 'path';
 import * as process from 'node:process';
+import { GrpcClientManger } from './grpc-client.manger';
+import { SchedulerRegistry } from '@nestjs/schedule';
+
+/**
+ * 创建 gRPC 客户端代理的辅助函数
+ * @param options - 客户端配置
+ * @param url - 要连接的 URL
+ * @returns ClientGrpc
+ */
+export function createGrpcClientProxy(
+  options: GrpcClientOptions,
+  url: string,
+): ClientGrpc {
+  const { packageName, protoPath } = options;
+  return ClientProxyFactory.create({
+    transport: Transport.GRPC,
+    options: {
+      package: packageName,
+      protoPath: join(process.cwd(), protoPath),
+      url: url,
+    },
+  });
+}
 
 /**
  * 创建 gRPC 客户端提供者的工厂函数
@@ -11,38 +38,45 @@ import * as process from 'node:process';
  * @returns Provider
  */
 export function createGrpcClientProvider(options: GrpcClientOptions): Provider {
-  const logger = new Logger('createGrpcClientProvider');
-  const { injectToken, serviceName, packageName, protoPath } = options;
   return {
     // 提供者的注入令牌
-    provide: injectToken,
-    useFactory: async (consulService: ConsulService) => {
-      logger.log(`[gRPC Client] Resolving address for service: ${serviceName}`);
+    provide: options.injectToken,
+    useFactory: async (
+      consulService: ConsulService,
+      schedulerRegistry: SchedulerRegistry,
+    ) => {
+      const logger = new Logger('createGrpcClientProvider');
+      const { serviceName } = options;
+      logger.log(
+        `[gRPC Client] Initializing provider for service: ${serviceName}`,
+      );
 
-      // 1. 动态解析服务地址
+      // 1. 动态解析服务地址，并在失败时抛出明确错误
       const serviceAddress = await consulService.resolveAddress(serviceName);
       if (!serviceAddress) {
-        logger.error(
-          `[gRPC Client] Could not resolve address for service: ${serviceName}. Is it running and registered in Consul?`,
+        throw new Error(
+          `[gRPC Client] Could not resolve initial address for service: "${serviceName}". Please ensure it is running and registered in Consul.`,
         );
       }
       const { address, port } = serviceAddress;
-      const url = `${address}:${port}`;
-      logger.log(`[gRPC Client] Service '${serviceName}' found at ${url}`);
+      const initialUrl = `${address}:${port}`;
+      logger.log(
+        `[gRPC Client] Service '${serviceName}' initially found at ${initialUrl}`,
+      );
 
-      // 2. 使用 ClientProxyFactory 创建 gRPC 客户端
-      return ClientProxyFactory.create({
-        transport: Transport.GRPC,
-        options: {
-          package: packageName,
-          protoPath: join(process.cwd(), 'proto', protoPath),
-          url,
-          // 可以在这里添加其他 gRPC 选项，例如凭证、超时等
-          // loader: { keepCase: true },
-        },
-      });
+      // 2. 使用 ClientProxyFactory 创建 gRPC 客户端，并添加类型断言
+      const initialClient = createGrpcClientProxy(options, initialUrl);
+
+      // 3. 创建客户端状态管理器
+      return new GrpcClientManger(
+        initialClient,
+        initialUrl,
+        options,
+        consulService,
+        schedulerRegistry,
+      );
     },
-    // 3. 注入 ConsulService 以便在工厂函数中使用它
-    inject: [ConsulService],
+    // 注入创建 Manager 所需的依赖
+    inject: [ConsulService, SchedulerRegistry],
   };
 }

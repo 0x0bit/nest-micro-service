@@ -14,6 +14,7 @@ import {
 } from '../../../../proto/generated/user.interface';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { GrpcClientManger } from '@app/grpc/grpc-client.manger';
 
 @Injectable()
 export class UserService implements OnModuleInit {
@@ -21,15 +22,16 @@ export class UserService implements OnModuleInit {
   private orderService: OrderServiceClient;
 
   constructor(
-    @Inject(USER_PACKAGE_NAME) private readonly userClient: ClientGrpc,
-    @Inject(ORDER_PACKAGE_NAME) private readonly orderClient: ClientGrpc,
+    @Inject(USER_PACKAGE_NAME)
+    private readonly userClientManager: GrpcClientManger<ClientGrpc>,
+    @Inject(ORDER_PACKAGE_NAME)
+    private readonly orderClientManager: GrpcClientManger<ClientGrpc>,
   ) {}
 
   onModuleInit() {
     this.userService =
-      this.userClient.getService<UserServiceClient>(USER_SERVICE_NAME);
-    this.orderService =
-      this.orderClient.getService<OrderServiceClient>(ORDER_SERVICE_NAME);
+      this.userClientManager.getService<UserServiceClient>(USER_SERVICE_NAME);
+    this.orderService = this.orderClientManager.getService(ORDER_SERVICE_NAME);
   }
 
   async create(createUserDto: CreateUserDto) {

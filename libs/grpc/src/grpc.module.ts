@@ -2,6 +2,7 @@ import { DynamicModule, Module, Provider } from '@nestjs/common';
 import { GrpcClientOptions } from './interfaces/grpc-client-options.interface';
 import { ConsulModule } from '@libs/consul';
 import { createGrpcClientProvider } from './grpc.provides';
+import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({})
 export class GrpcModule {
@@ -22,7 +23,7 @@ export class GrpcModule {
     return {
       module: GrpcModule,
       global: true,
-      imports: [ConsulModule],
+      imports: [ConsulModule, ScheduleModule.forRoot()],
       // 注册动态创建的提供者
       providers: [...clientProviders],
       // 导出这些提供者，以便其他模块可以注入它们

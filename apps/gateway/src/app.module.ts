@@ -10,6 +10,7 @@ import {
   ORDER_PACKAGE_NAME,
   ORDER_SERVICE_NAME,
 } from '../../../proto/generated/order.interface';
+import { CronExpression } from '@nestjs/schedule';
 
 @Module({
   imports: [
@@ -24,13 +25,15 @@ import {
         injectToken: USER_PACKAGE_NAME,
         serviceName: USER_SERVICE_NAME,
         packageName: USER_PACKAGE_NAME,
-        protoPath: 'user.proto',
+        protoPath: 'proto/user.proto',
+        cron: CronExpression.EVERY_10_SECONDS,
       },
       {
         injectToken: ORDER_PACKAGE_NAME,
         serviceName: ORDER_SERVICE_NAME,
         packageName: ORDER_PACKAGE_NAME,
-        protoPath: 'order.proto',
+        protoPath: 'proto/order.proto',
+        cron: '*/30 * * * * *',
       },
     ]),
     UserModule,
