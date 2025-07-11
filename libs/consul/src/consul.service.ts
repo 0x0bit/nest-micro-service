@@ -1,10 +1,4 @@
-import {
-  Inject,
-  Injectable,
-  Logger,
-  OnModuleDestroy,
-  OnModuleInit,
-} from '@nestjs/common';
+import { Inject, Injectable, Logger, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import type { Got } from 'got';
 import got from 'got';
 import { CONSUL_OPTIONS } from './consul.constants';
@@ -14,9 +8,10 @@ import {
   ResolveAddress,
   ServiceRegisterOptions,
 } from './interfaces/consul-service.interface';
+import { IServiceDiscovery } from '@app/grpc/interfaces/service-discovery.interface';
 
 @Injectable()
-export class ConsulService implements OnModuleInit, OnModuleDestroy {
+export class ConsulService implements OnModuleInit, OnModuleDestroy, IServiceDiscovery {
   private readonly logger = new Logger('ConsulService');
   private readonly request: Got;
   private readonly defServiceRegisterOptions: ServiceRegisterOptions;
@@ -61,13 +56,9 @@ export class ConsulService implements OnModuleInit, OnModuleDestroy {
       await this.request.put('agent/service/register', {
         json: registerPayload,
       });
-      this.logger.log(
-        `[Consul] Service [${serviceName}] registered successfully`,
-      );
+      this.logger.log(`[Consul] Service [${serviceName}] registered successfully`);
     } catch (error) {
-      this.logger.error(
-        `[Consul] Error registering service ${serviceName}: ${error.message}`,
-      );
+      this.logger.error(`[Consul] Error registering service ${serviceName}: ${error.message}`);
     }
     return true;
   }
@@ -80,13 +71,9 @@ export class ConsulService implements OnModuleInit, OnModuleDestroy {
     serviceId = serviceId ? serviceId : this.defServiceRegisterOptions.ID;
     try {
       await this.request.put(`agent/service/deregister/${serviceId}`);
-      this.logger.log(
-        `[Consul] Service [${serviceId}] deregistered successfully`,
-      );
+      this.logger.log(`[Consul] Service [${serviceId}] deregistered successfully`);
     } catch (error) {
-      this.logger.error(
-        `[Consul] Error deregistering service ${serviceId}: ${error.message}`,
-      );
+      this.logger.error(`[Consul] Error deregistering service ${serviceId}: ${error.message}`);
     }
   }
 
